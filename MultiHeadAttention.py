@@ -16,7 +16,6 @@ import tensorflow as tf
 
 
 class MultiHeadAttention(tf.keras.layers.Layer):
-
     """Implemented with tf.einsum(), is faster than using tf.transpose() with tf.matmul()"""
 
     def __init__(self, d_model, num_heads):
@@ -55,14 +54,14 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         k = self.split_heads(k, batch_size)  # (batch_size, len_v, num_heads, depth_q) (m,j,h,d)
         v = self.split_heads(v, batch_size)  # (batch_size, len_v, num_heads, depth_v) (m,j,h,e)
 
-        qk = tf.einsum("mlhd,mjhd->mljh", q, k)  # (batch_size, len_q, len_v, num_heads) (m,l,j,h)
+        qk = tf.einsum("mlhd,mjhd->mjlh", q, k)  # (batch_size, len_q, len_v, num_heads) (m,j,l,h)
         dk = tf.cast(tf.shape(k)[-1], tf.float32)
         qk = qk / tf.math.sqrt(dk)
 
         if mask is not None:
-            qk = qk - mask*1e9 # We are using a multiplicative mask
+            qk = qk - mask * 1e9  # 1's indicate masking
 
-        qk = tf.nn.softmax(qk, axis=-2)  # (batch_size,len_q,len_v, num_heads) (m,l,j,h)
+        qk = tf.nn.softmax(qk, axis=-2)  # (batch_size,len_q,len_v, num_heads) (m,j,l,h)
         dk = tf.cast(tf.shape(k)[-1], tf.float32)
         qk = qk / tf.math.sqrt(dk)
 
