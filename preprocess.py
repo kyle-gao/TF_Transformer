@@ -15,7 +15,6 @@ Copyright 2020 Yi Lin(Kyle) Gao
 
 from main import *
 
-
 def encode(fr, eng):
     # Adds start token (tokenizer.vocab_size) and end token (tokenizer.vocab_size + 1) to (question,answer)
     question = [tokenizer_fr.vocab_size] + tokenizer_fr.encode(fr.numpy()) + [tokenizer_fr.vocab_size + 1]

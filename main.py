@@ -22,7 +22,7 @@ min_len_en = 10  # The transcript has many short lines indicating the date or sp
 max_len_fr = 50
 min_len_fr = 10
 
-EPOCHS = 0
+EPOCHS = 1
 
 eng_path = "Data/en.txt"
 fr_path = "Data/fr.txt"
@@ -39,8 +39,11 @@ tokenizer_fr = tfds.features.text.SubwordTextEncoder.build_from_corpus(
   (fr.numpy() for en, fr in ds), target_vocab_size=2**14)
 tokenizer_fr.save_to_file("tokenizer_fr")"""
 
-tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file("Data/tokenizer_en")
-tokenizer_fr = tfds.features.text.SubwordTextEncoder.load_from_file("Data/tokenizer_fr")
+#tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file("Data/tokenizer_en") #For tfds version <4.0
+#tokenizer_fr = tfds.features.text.SubwordTextEncoder.load_from_file("Data/tokenizer_fr")
+
+tokenizer_en = tfds.deprecated.text.SubwordTextEncoder.load_from_file("Data/tokenizer_en") #For tfds version <4.0
+tokenizer_fr = tfds.deprecated.text.SubwordTextEncoder.load_from_file("Data/tokenizer_fr")
 
 en_vocab_size = tokenizer_en.vocab_size + 2
 fr_vocab_size = tokenizer_fr.vocab_size + 2
@@ -84,6 +87,7 @@ def translate(sentence):
                                               if tokenizer_en.vocab_size > i > 0])
     print('Input: {}'.format(sentence))
     print('Predicted answer: {}'.format(predicted_sentence))
+
 
 
 def main():

@@ -41,52 +41,25 @@ def positional_encoding(pos, d_model):
 
 
 def padding_mask(seq):
-    # Returns (batch, seq_len, 1, 1) tensor with 0's where the sequence is padded, 1 where it is not
+    # Returns (batch, seq_len, 1, 1) tensor with 1's where the sequence is padded, 0 where it is not
 
-    mask = tf.cast(tf.math.not_equal(seq, 0), tf.float32)
-    # we apply mask to (m, j, h, d) or (m,j,l,h) <- to mask j
-    return mask[:, :, tf.newaxis, tf.newaxis]  # (batch, seq_len, 1, 1)
+    mask = tf.cast(tf.math.equal(seq, 0), tf.float32)
+    return mask[:, tf.newaxis, :,  tf.newaxis]  # (batch, 1, seq_len, 1) m l j h  <- j gets masked
 
 
 def forward_mask(seq):
     """
     Calculates a combined forward mask and padding mask for a batch of sequences
     :param seq: (batch,seq_len) a batch of sequences
-    :return:  a combined look_ahead_mask (lower triangular 1s)
+    :return:  a combined look_ahead_mask (upper triangular 1s)
     and padding mask (batch, seq_len, seq_len, 1)
     """
     seq_len = tf.shape(seq)[1]
 
-    look_ahead_mask = tf.linalg.band_part(tf.ones((seq_len, seq_len)), -1, 0)
+    look_ahead_mask = 1 - tf.linalg.band_part(tf.ones((seq_len, seq_len)), -1, 0)
     look_ahead_mask = look_ahead_mask[tf.newaxis, :, :, tf.newaxis]  # (batch, seq_len, seq_len, 1)
 
     padded_mask = padding_mask(seq)
-    # forward mask is applied to (m, l, j ,h)
-    # return tf.minimum(padded_mask, look_ahead_mask)
-    return padded_mask * look_ahead_mask
 
-
-def padding_mask5(seq):
-    # Returns (batch, seq_len, 1, 1, 1 ) tensor with 0's where the sequence is padded, 1 where it is not
-
-    mask = tf.cast(tf.math.not_equal(seq, 0), tf.float32)
-
-    return mask[:, :, tf.newaxis, tf.newaxis, tf.newaxis]  # (batch, seq_len, 1, 1)
-
-
-def forward_mask5(seq):
-    """
-    Calculates a combined forward mask and padding mask for a batch of sequences
-    :param seq: (batch,seq_len) a batch of sequences
-    :return:  a combined look_ahead_mask (lower triangular 1s)
-    and padding mask (batch, seq_len, seq_len, 1, 1)
-    """
-    seq_len = tf.shape(seq)[1]
-
-    look_ahead_mask = tf.linalg.band_part(tf.ones((seq_len, seq_len)), -1, 0)
-    look_ahead_mask = look_ahead_mask[tf.newaxis, :, :, tf.newaxis, tf.newaxis]  # (batch, seq_len, seq_len, 1)
-
-    padded_mask = padding_mask5(seq)
-    # forward mask is applied to (m, l, j ,h)
-    # return tf.minimum(padded_mask, look_ahead_mask)
-    return padded_mask * look_ahead_mask
+    # return padded_mask * look_ahead_mask  # (batch, seq_len, seq_len, 1)
+    return tf.maximum(padded_mask, look_ahead_mask)
